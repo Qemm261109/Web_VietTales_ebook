@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#7c2d24">
+  <title>Di Sản Việt — Thư viện truyện dân gian</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="Di Sản Việt - Trang chủ">
+      <span class="brand-mark">✿</span>
+      <span><b>DI SẢN VIỆT</b><small>Kho tàng truyện dân gian</small></span>
+    </a>
+    <nav class="main-nav">
+      <a href="#home">Trang chủ</a>
+      <a href="#library">Thư viện truyện</a>
+      <a href="#about">Về dự án</a>
+    </nav>
+    <button class="button button-outline" id="admin-open">Quản trị viên</button>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-content">
+        <p class="eyebrow">GÌN GIỮ CHUYỆN XƯA · LAN TỎA GIÁ TRỊ VIỆT</p>
+        <h1>Mỗi câu chuyện,<br><em>một miền ký ức.</em></h1>
+        <p class="hero-copy">Khám phá kho tàng truyện dân gian Việt Nam, nơi những câu chuyện được lưu giữ, kết nối và kể tiếp qua các thế hệ.</p>
+        <a class="button button-light" href="#library">Khám phá thư viện <span>↗</span></a>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="sun"></div><div class="hill hill-one"></div><div class="hill hill-two"></div>
+        <div class="temple">⌂</div><div class="bird bird-one">⌁</div><div class="bird bird-two">⌁</div>
+        <div class="hero-seal">TRUYỆN<br>DÂN GIAN</div>
+      </div>
+      <div class="hero-bottom"><span>VĂN HÓA · LỊCH SỬ · CON NGƯỜI</span><span>01 / THƯ VIỆN SỐ</span></div>
+    </section>
+
+    <section class="section intro-strip" id="about">
+      <div><p class="eyebrow">DI SẢN TRONG TẦM TAY</p><h2>Chuyện kể từ quê hương</h2></div>
+      <p>Góp phần bảo tồn và lan tỏa những giá trị văn hóa dân gian địa phương bằng công nghệ số; giúp thế hệ trẻ tiếp cận di sản theo cách gần gũi, sinh động hơn.</p>
+    </section>
+
+    <section class="section library-section" id="library">
+      <div class="section-heading">
+        <div><p class="eyebrow">KHÁM PHÁ KHO TÀNG</p><h2>Thư viện truyện</h2></div>
+        <span class="story-count" id="story-count">Đang tải truyện…</span>
+      </div>
+      <div class="library-tools">
+        <label class="search-box"><span>⌕</span><input id="search-input" type="search" placeholder="Tìm tên truyện, địa danh, tác giả…"></label>
+        <select id="category-filter" aria-label="Lọc thể loại"><option value="">Tất cả thể loại</option></select>
+      </div>
+      <div class="category-chips" id="category-chips"></div>
+      <div class="story-grid" id="story-grid"><div class="loading">Đang kết nối thư viện…</div></div>
+      <div class="empty-state hidden" id="empty-state"><span>✿</span><h3>Chưa tìm thấy câu chuyện phù hợp</h3><p>Bé thử đổi từ khóa hoặc chọn thể loại khác nhé.</p></div>
+    </section>
+
+    <section class="quote-band">
+      <span class="quote-mark">“</span>
+      <p>Một dân tộc biết trân trọng chuyện xưa<br>là một dân tộc biết gìn giữ cội nguồn.</p>
+      <small>DI SẢN VIỆT · KỂ CHUYỆN ĐỂ CÒN MÃI</small>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand brand-footer" href="#"><span class="brand-mark">✿</span><span><b>DI SẢN VIỆT</b><small>Kho tàng truyện dân gian</small></span></a>
+    <p>Gìn giữ ký ức hôm qua · Bồi đắp tâm hồn hôm nay</p>
+    <span>© <span id="year"></span> Thư viện truyện dân gian số</span>
+  </footer>
+
+  <div class="modal hidden" id="story-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-backdrop" data-close="story-modal"></div>
+    <article class="story-reader">
+      <button class="icon-button close-modal" data-close="story-modal" aria-label="Đóng">×</button>
+      <img id="reader-image" class="reader-image hidden" alt="">
+      <div class="reader-content">
+        <p class="eyebrow" id="reader-category"></p><h2 id="modal-title"></h2>
+        <div class="reader-meta" id="reader-meta"></div>
+        <div id="reader-body" class="reader-body"></div>
+        <p id="reader-source" class="reader-source"></p>
+      </div>
+    </article>
+  </div>
+
+  <div class="modal hidden" id="admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+    <div class="modal-backdrop" data-close="admin-modal"></div>
+    <section class="admin-panel">
+      <button class="icon-button close-modal" data-close="admin-modal" aria-label="Đóng">×</button>
+      <div id="admin-login-view">
+        <p class="eyebrow">KHÔNG GIAN QUẢN LÝ</p><h2 id="admin-title">Quản trị viên</h2>
+        <p class="muted">Đăng nhập để quản lý truyện, thể loại và hình ảnh trong thư viện.</p>
+        <form id="login-form" class="stack-form">
+          <label>Email quản trị<input type="email" id="login-email" autocomplete="username" required></label>
+          <label>Mật khẩu<input type="password" id="login-password" autocomplete="current-password" required></label>
+          <button class="button button-primary" type="submit">Đăng nhập</button>
+          <p class="form-message" id="login-message" aria-live="polite"></p>
+        </form>
+      </div>
+      <div id="admin-dashboard" class="hidden">
+        <div class="admin-heading"><div><p class="eyebrow">BẢNG ĐIỀU KHIỂN</p><h2>Quản lý thư viện</h2></div><button class="button button-outline" id="logout-button">Đăng xuất</button></div>
+        <div class="admin-tabs"><button class="tab active" data-tab="stories">Truyện</button><button class="tab" data-tab="categories">Thể loại</button></div>
+        <section id="stories-tab">
+          <div class="admin-actions"><button class="button button-primary" id="new-story-button">＋ Thêm truyện</button><label class="button button-outline upload-doc-label">Nhập file Word (.docx)<input type="file" id="docx-import" accept=".docx"></label></div>
+          <p class="hint">Tệp Word được trích xuất thành nội dung nháp để bé kiểm tra, chỉnh sửa rồi mới lưu. Không tải tệp .doc cũ; hãy lưu thành .docx.</p>
+          <div class="admin-story-list" id="admin-story-list"></div>
+          <form id="story-form" class="editor-form hidden">
+            <div class="editor-title"><h3 id="editor-heading">Thêm truyện mới</h3><button type="button" class="icon-button" id="cancel-editor" aria-label="Đóng trình soạn">×</button></div>
+            <input type="hidden" id="story-id">
+            <div class="form-grid">
+              <label class="wide">Tên truyện *<input id="story-title" required maxlength="180"></label>
+              <label>Thể loại *<select id="story-category" required></select></label>
+              <label>Tác giả / người sưu tầm<input id="story-author" maxlength="180"></label>
+              <label>Địa danh<input id="story-location" maxlength="180" placeholder="Ví dụ: Vĩnh Long"></label>
+              <label>Năm / nguồn xuất bản<input id="story-year" maxlength="180" placeholder="Ví dụ: Tuyển tập…, 2020"></label>
+              <label class="wide">Mô tả ngắn<textarea id="story-summary" rows="2" maxlength="500"></textarea></label>
+              <label class="wide">Nội dung truyện *<textarea id="story-content" rows="10" required></textarea></label>
+              <label class="wide">Nguồn tư liệu / ghi chú bản quyền<input id="story-source" maxlength="500" placeholder="Ghi rõ sách, tác giả, trang, đường dẫn hoặc tình trạng quyền sử dụng"></label>
+              <label class="wide">Ảnh bìa<input type="file" id="story-image" accept="image/png,image/jpeg,image/webp"></label>
+              <div class="wide image-preview-wrap"><img id="image-preview" class="hidden" alt="Xem trước ảnh bìa"><span id="image-preview-empty" class="muted">Chưa chọn ảnh mới</span><button type="button" class="text-button hidden" id="remove-image">Gỡ ảnh bìa</button></div>
+              <label class="checkbox-label wide"><input type="checkbox" id="story-published"> Xuất bản công khai (độc giả có thể đọc)</label>
+            </div>
+            <div class="editor-actions"><button class="button button-primary" type="submit" id="save-story">Lưu truyện</button><button type="button" class="button button-outline" id="cancel-editor-2">Hủy</button><span class="form-message" id="editor-message" aria-live="polite"></span></div>
+          </form>
+        </section>
+        <section id="categories-tab" class="hidden">
+          <form id="category-form" class="category-form"><label>Tên thể loại mới<input id="new-category-name" maxlength="80" required placeholder="Ví dụ: Truyện giải thích địa danh"></label><button class="button button-primary" type="submit">Thêm thể loại</button></form>
+          <p class="hint">Không thể xóa thể loại đang được truyện sử dụng. Hãy chuyển truyện sang thể loại khác trước.</p>
+          <div id="admin-category-list" class="admin-story-list"></div>
+        </section>
+      </div>
+    </section>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
