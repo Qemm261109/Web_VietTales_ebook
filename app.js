@@ -45,6 +45,50 @@ async function uploadWordImage(image){
 reset();$('story-id').value='';imagePath=null;$('editor-title').textContent='Thêm truyện mới';$('story-message').textContent='';$('docx').value='';$('story-image').value=''}
 function edit(id){let s=stories.find(x=>x.id===id);if(!s)return;reset();$('story-id').value=s.id;$('story-name').value=s.title;$('story-category').value=s.category;$('story-summary').value=s.summary||'';$('story-text').value=s.content;$('featured').checked=s.is_featured;$('published').checked=s.is_published;imagePath=s.image_path;$('editor-title').textContent='Chỉnh sửa truyện';tab('editor')}
 async function save(e){e.preventDefault();if(!db||!admin)return;let id=$('story-id').value,p={title:$('story-name').value.trim(),category:$('story-category').value,summary:$('story-summary').value.trim(),content:$('story-text').value.trim(),is_featured:$('featured').checked,is_published:$('published').checked,author_name:user.email||''};if(!p.title||!p.content){$('story-message').textContent='Vui lòng nhập tên truyện và nội dung.';return}try{let file=$('story-image').files[0];if(file){if(file.size>5*1024*1024)throw Error('Ảnh cần nhỏ hơn 5 MB.');let ext=file.name.split('.').pop().toLowerCase(),path=`${user.id}/${crypto.randomUUID()}.${ext}`;let up=await db.storage.from('story-images').upload(path,file,{contentType:file.type});if(up.error)throw up.error;p.image_path=path;p.image_url=db.storage.from('story-images').getPublicUrl(path).data.publicUrl}else if(id){let old=stories.find(s=>s.id===id);p.image_path=old?.image_path||null;p.image_url=old?.image_url||null}let r=id?await db.from('stories').update(p).eq('id',id):await db.from('stories').insert(p);if(r.error)throw r.error;toast(id?'Đã cập nhật truyện.':'Đã thêm truyện.');reset();tab('list');await adminList()}catch(e){$('story-message').textContent=e.message||'Không lưu được truyện.'}}
-async function init(){document.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();history.pushState(null,'','#'+a.dataset.page);page(a.dataset.page)}));window.addEventListener('hashchange',()=>page((location.hash||'#trang-chu').slice(1)));page((location.hash||'#trang-chu').slice(1));$('menu-toggle').onclick=()=>$('nav').classList.toggle('open');$('open-auth').onclick=async()=>{if(user&&admin)await openAdmin();else modal('auth-modal',true)};$('login-tab').onclick=()=>authTab('login');$('signup-tab').onclick=()=>authTab('signup');$('auth-form').onsubmit=submitAuth;document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>modal(b.dataset.close,false));document.querySelectorAll('.backdrop').forEach(b=>b.onclick=e=>{if(e.target===b)modal(b.id,false)});document.addEventListener('click',async e=>{let c=e.target.closest('[data-story]');if(c){let s=stories.find(x=>x.id===c.dataset.story);if(s){$('reader-category').textContent=s.category;$('reader-title').textContent=s.title;$('reader-meta').textContent=s.author_name||'Kho tàng truyện dân gian địa phương';$('reader-content').textContent=s.content;modal('reader-modal',true)}return}let ed=e.target.closest('[data-edit]');if(ed){edit(ed.dataset.edit);return}let pub=e.target.closest('[data-publish]');if(pub){let s=stories.find(x=>x.id===pub.dataset.publish);let r=await db.from('stories').update({is_published:!s.is_published}).eq('id',s.id);if(r.error)toast(r.error.message,true);else await adminList();return}let del=e.target.closest('[data-delete]');if(del){let s=stories.find(x=>x.id===del.dataset.delete);if(s&&confirm(`Xóa truyện “${s.title}”?`)){let r=await db.from('stories').delete().eq('id',s.id);if(r.error)toast(r.error.message,true);else await adminList()} }});$('new-story').onclick=()=>{reset();tab('editor')};$('cancel-edit').onclick=()=>{reset();tab('list')};document.querySelectorAll('.admin-tab').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='editor'&&!$('story-id').value)reset();tab(b.dataset.tab)});$('story-form').onsubmit=save;$('docx').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let r=await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});$('story-text').value=r.value.trim();if(!$('story-name').value)$('story-name').value=f.name.replace(/\.docx$/i,'').replace(/[_-]/g,' ');$('story-message').textContent='Đã trích xuất. Hãy kiểm tra nội dung trước khi lưu.'}catch{$('story-message').textContent='Không đọc được tệp. Hãy chọn file .docx hợp lệ.'}};$('logout').onclick=async()=>{await db.auth.signOut();user=null;admin=false;$('open-auth').textContent='Đăng nhập';modal('admin-modal',false);toast('Đã đăng xuất.')};let ok=window.SUPABASE_URL&&!SUPABASE_URL.includes('PASTE_YOUR')&&window.SUPABASE_ANON_KEY&&!SUPABASE_ANON_KEY.includes('PASTE_YOUR');if(ok&&window.supabase){db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);db.auth.onAuthStateChange(()=>setTimeout(refresh,0));await refresh();await load()}else render()}
+async function init(){document.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();history.pushState(null,'','#'+a.dataset.page);page(a.dataset.page)}));window.addEventListener('hashchange',()=>page((location.hash||'#trang-chu').slice(1)));page((location.hash||'#trang-chu').slice(1));$('menu-toggle').onclick=()=>$('nav').classList.toggle('open');$('open-auth').onclick=async()=>{if(user&&admin)await openAdmin();else modal('auth-modal',true)};$('login-tab').onclick=()=>authTab('login');$('signup-tab').onclick=()=>authTab('signup');$('auth-form').onsubmit=submitAuth;document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>modal(b.dataset.close,false));document.querySelectorAll('.backdrop').forEach(b=>b.onclick=e=>{if(e.target===b)modal(b.id,false)});document.addEventListener('click',async e=>{let c=e.target.closest('[data-story]');if(c){let s=stories.find(x=>x.id===c.dataset.story);if(s){$('reader-category').textContent=s.category;$('reader-title').textContent=s.title;$('reader-meta').textContent=s.author_name||'Kho tàng truyện dân gian địa phương';let content=s.content||'';
+
+if(/<\/?(p|div|img|h[1-6]|ul|ol|li|table|br)\b/i.test(content)){
+  $('reader-content').innerHTML=DOMPurify.sanitize(content);
+}else{
+  $('reader-content').textContent=content;
+}modal('reader-modal',true)}return}let ed=e.target.closest('[data-edit]');if(ed){edit(ed.dataset.edit);return}let pub=e.target.closest('[data-publish]');if(pub){let s=stories.find(x=>x.id===pub.dataset.publish);let r=await db.from('stories').update({is_published:!s.is_published}).eq('id',s.id);if(r.error)toast(r.error.message,true);else await adminList();return}let del=e.target.closest('[data-delete]');if(del){let s=stories.find(x=>x.id===del.dataset.delete);if(s&&confirm(`Xóa truyện “${s.title}”?`)){let r=await db.from('stories').delete().eq('id',s.id);if(r.error)toast(r.error.message,true);else await adminList()} }});$('new-story').onclick=()=>{reset();tab('editor')};$('cancel-edit').onclick=()=>{reset();tab('list')};document.querySelectorAll('.admin-tab').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='editor'&&!$('story-id').value)reset();tab(b.dataset.tab)});$('story-form').onsubmit=save;$('story-form').onsubmit=save;
+$('docx').onchange=async e=>{
+  let f=e.target.files[0];
+  if(!f)return;
+
+  if(!f.name.toLowerCase().endsWith('.docx')){
+    $('story-message').textContent='Vui lòng chọn file .docx.';
+    return;
+  }
+
+  try{
+    $('story-message').textContent='Đang đọc văn bản và tải ảnh...';
+
+    let r=await mammoth.convertToHtml(
+      {arrayBuffer:await f.arrayBuffer()},
+      {
+        convertImage:mammoth.images.imgElement(
+          image=>uploadWordImage(image)
+        )
+      }
+    );
+
+    $('story-text').value=r.value.trim();
+
+    if(!$('story-name').value){
+      $('story-name').value=f.name
+        .replace(/\.docx$/i,'')
+        .replace(/[_-]/g,' ');
+    }
+
+    $('story-message').textContent=
+      'Đã nhập nội dung và ảnh. Hãy kiểm tra trước khi lưu.';
+  }catch(err){
+    console.error(err);
+    $('story-message').textContent=
+      'Không đọc được Word hoặc tải ảnh thất bại: '+err.message;
+  }
+};
+;modal('admin-modal',false);toast('Đã đăng xuất.')};let ok=window.SUPABASE_URL&&!SUPABASE_URL.includes('PASTE_YOUR')&&window.SUPABASE_ANON_KEY&&!SUPABASE_ANON_KEY.includes('PASTE_YOUR');if(ok&&window.supabase){db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);db.auth.onAuthStateChange(()=>setTimeout(refresh,0));await refresh();await load()}else render()}
 document.addEventListener('DOMContentLoaded',init);
 })();
